@@ -1826,7 +1826,7 @@ jobs:
       matrix:
         job:
           - { target: x86_64-unknown-linux-gnu, arch: x86_64 }
-          - { target: aarch64-unknown-linux-gnu, arch: aarch64 }
+          #- { target: aarch64-unknown-linux-gnu, arch: aarch64 }
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
@@ -1891,14 +1891,14 @@ jobs:
               arch: x86_64,
               suffix: "-sciter",
             }
-          - {
-              target: aarch64-unknown-linux-gnu,
-              # try out newer flatpak since error of "error: Nothing matches org.freedesktop.Platform in remote flathub"
-              distro: ubuntu22.04,
-              on: [self-hosted, Linux, ARM64],
-              arch: aarch64,
-              suffix: "",
-            }
+          # - {
+          #     target: aarch64-unknown-linux-gnu,
+          #     # try out newer flatpak since error of "error: Nothing matches org.freedesktop.Platform in remote flathub"
+          #     distro: ubuntu22.04,
+          #     on: [self-hosted, Linux, ARM64],
+          #     arch: aarch64,
+          #     suffix: "",
+          #   }
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
