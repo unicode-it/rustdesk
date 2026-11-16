@@ -26,12 +26,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Diagnose Server-Konstanten
-        shell: bash
-        run: |
-          ls -la libs/hbb_common/src/ || true
-          grep -rn "RENDEZVOUS\|RS_PUB_KEY\|PUB_KEY" libs/ src/ || echo "keine Treffer"
-          
+
       - name: Eigene Server-Einstellungen eintragen
         shell: bash
         run: |
@@ -43,14 +38,29 @@ jobs:
           key = os.environ["RS_PUB_KEY"]
           if not server or not key:
               sys.exit("Fehler: Secrets RENDEZVOUS_SERVER oder RS_PUB_KEY sind leer")
-          for name, value in [("DEFAULT_RENDEZVOUS_SERVER", server), ("DEFAULT_RS_PUB_KEY", key)]:
-              pattern = re.compile(r'(' + name + r'\s*:\s*&str\s*=\s*)"[^"]*"')
-              src, count = pattern.subn(lambda m: m.group(1) + '"' + value + '"', src)
-              print(f"{name}: {count} Ersetzung(en)")
-              if count == 0:
-                  sys.exit(f"Konstante {name} nicht gefunden, bitte Schreibweise in config.rs prüfen")
+
+          # Liste mit einem Eintrag, z.B. ["rustdesk.meinedomain.de"]
+          src, n1 = re.subn(
+              r'(pub const RENDEZVOUS_SERVERS: &\[&str\] = &\[)[^\]]*(\];)',
+              lambda m: m.group(1) + '"' + server + '"' + m.group(2),
+              src,
+          )
+          # Public Key
+          src, n2 = re.subn(
+              r'(pub const RS_PUB_KEY: &str = )"[^"]*"',
+              lambda m: m.group(1) + '"' + key + '"',
+              src,
+          )
+          print(f"RENDEZVOUS_SERVERS: {n1} Ersetzung(en)")
+          print(f"RS_PUB_KEY: {n2} Ersetzung(en)")
+          if n1 == 0 or n2 == 0:
+              sys.exit("Konstante nicht gefunden, bitte config.rs prüfen")
           open(path, "w", encoding="utf-8").write(src)
           EOF
+        env:
+          RENDEZVOUS_SERVER: ${{ secrets.RENDEZVOUS_SERVER }}
+          RS_PUB_KEY: ${{ secrets.RS_PUB_KEY }}
+
 
 
       - name: Rust installieren
