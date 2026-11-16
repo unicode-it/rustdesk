@@ -26,7 +26,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-
+      - name: Diagnose Server-Konstanten
+        shell: bash
+        run: |
+          ls -la libs/hbb_common/src/ || true
+          grep -rn "RENDEZVOUS\|RS_PUB_KEY\|PUB_KEY" libs/ src/ || echo "keine Treffer"
+          
       - name: Eigene Server-Einstellungen eintragen
         shell: bash
         run: |
