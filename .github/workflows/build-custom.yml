@@ -30,9 +30,23 @@ jobs:
       - name: Eigene Server-Einstellungen eintragen
         shell: bash
         run: |
-          sed -i "s|DEFAULT_RENDEZVOUS_SERVER: &str = \"[^\"]*\"|DEFAULT_RENDEZVOUS_SERVER: \&str = \"${RENDEZVOUS_SERVER}\"|" libs/hbb_common/src/config.rs
-          sed -i "s|DEFAULT_RS_PUB_KEY: &str = \"[^\"]*\"|DEFAULT_RS_PUB_KEY: \&str = \"${RS_PUB_KEY}\"|" libs/hbb_common/src/config.rs
-          grep -n "DEFAULT_RENDEZVOUS_SERVER\|DEFAULT_RS_PUB_KEY" libs/hbb_common/src/config.rs
+          python3 - <<'EOF'
+          import os, re, sys
+          path = "libs/hbb_common/src/config.rs"
+          src = open(path, encoding="utf-8").read()
+          server = os.environ["RENDEZVOUS_SERVER"]
+          key = os.environ["RS_PUB_KEY"]
+          if not server or not key:
+              sys.exit("Fehler: Secrets RENDEZVOUS_SERVER oder RS_PUB_KEY sind leer")
+          for name, value in [("DEFAULT_RENDEZVOUS_SERVER", server), ("DEFAULT_RS_PUB_KEY", key)]:
+              pattern = re.compile(r'(' + name + r'\s*:\s*&str\s*=\s*)"[^"]*"')
+              src, count = pattern.subn(lambda m: m.group(1) + '"' + value + '"', src)
+              print(f"{name}: {count} Ersetzung(en)")
+              if count == 0:
+                  sys.exit(f"Konstante {name} nicht gefunden, bitte Schreibweise in config.rs prüfen")
+          open(path, "w", encoding="utf-8").write(src)
+          EOF
+
 
       - name: Rust installieren
         uses: dtolnay/rust-toolchain@stable
