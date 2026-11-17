@@ -114,7 +114,7 @@ jobs:
       - name: Build
         shell: bash
         run: |
-          python3 build.py --flutter
+          python3 build.py --flutter 
 
       - name: Artefakt hochladen
         uses: actions/upload-artifact@v4
